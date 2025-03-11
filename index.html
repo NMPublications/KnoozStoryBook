@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebAR High-Quality Camera</title>
+    <title>High-Quality WebAR</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/ar.js@1.7.2/aframe/build/aframe-ar.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; }
-        video { transform: scaleX(1); } /* Prevent mirroring */
+        #videoFeed { position: fixed; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; }
     </style>
 </head>
 <body>
-    <video id="customCameraFeed" autoplay playsinline style="display: none;"></video>  
+    <!-- High-Resolution Custom Camera Feed -->
+    <video id="videoFeed" autoplay playsinline></video>
 
     <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="antialias: true; precision: high;">
-        <!-- AR Marker -->
         <a-marker type="pattern" url="pattern-coverAR.patt">
             <a-video src="https://drive.google.com/uc?export=preview&id=1IkrJWyI2o7WUchp2Z8iKKVhoZ8k9qkta" width="2" height="1.2" position="0 0.5 0"></a-video>
         </a-marker>
@@ -23,15 +23,24 @@
     </a-scene>
 
     <script>
-      // Force High-Resolution Camera Feed
-      navigator.mediaDevices.getUserMedia({
-          video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: "environment" }
-      }).then((stream) => {
-          let video = document.getElementById("customCameraFeed");
-          video.srcObject = stream;
-          let arSource = document.querySelector("a-scene").systems["arjs"].arSource;
-          arSource.domElement.srcObject = stream;
-      }).catch((err) => console.error("Camera error:", err));
+      async function setupCamera() {
+          try {
+              const stream = await navigator.mediaDevices.getUserMedia({
+                  video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: "environment" }
+              });
+
+              const video = document.getElementById("videoFeed");
+              video.srcObject = stream;
+
+              // Replace AR.js camera feed with our high-res feed
+              const arSource = document.querySelector("a-scene").systems["arjs"].arSource;
+              arSource.domElement.srcObject = stream;
+          } catch (error) {
+              console.error("Camera access error:", error);
+          }
+      }
+
+      setupCamera();
     </script>
 </body>
 </html>
