@@ -12,7 +12,7 @@
     </style>
 </head>
 <body>
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="antialias: true; precision: high;">
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="antialias: true; precision: high;" vr-mode-ui="enabled: false">
         <!-- Marker (Use your .patt marker file) -->
         <a-marker type="pattern" url="pattern-coverAR.patt">
             <!-- Example 3D Model -->
@@ -24,7 +24,7 @@
 
             <!-- Example Video -->
             <a-video 
-                src="https://drive.google.com/uc?export=preview&id=1IkrJWyI2o7WUchp2Z8iKKVhoZ8k9qkta" 
+                src="video.mp4https://drive.google.com/uc?export=preview&id=1IkrJWyI2o7WUchp2Z8iKKVhoZ8k9qkta" 
                 width="2" height="1.2" 
                 position="0 0.5 0">
             </a-video>
@@ -34,10 +34,19 @@
     </a-scene>
 
     <script>
-        // Auto-launch fullscreen WebAR when page loads
-        window.onload = function() {
-            document.querySelector("a-scene").requestFullscreen();
-        };
+      // Force high-resolution camera
+      let arSource;
+      setTimeout(() => {
+        arSource = document.querySelector("a-scene").systems["arjs"].arSource;
+        arSource.ready.then(() => {
+          let constraints = {
+            video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: "environment" }
+          };
+          navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
+            arSource.domElement.srcObject = stream;
+          });
+        });
+      }, 1000);
     </script>
 </body>
 </html>
