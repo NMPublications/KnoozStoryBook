@@ -1,28 +1,85 @@
 <!DOCTYPE html>
-
-
-<html>
+<html lang="en">
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-  </head>
-  <body>
-    <a-scene mindar-image="imageTargetSrc: TryTarget.mind;" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-      <a-assets>
-        <img id="card" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.png" />
-        <a-asset-item id="avatarModel" src="https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/softmind/scene.gltf"></a-asset-item>
-      </a-assets>
+    <script>
+      window.addEventListener("load", function () {
+        const video = document.querySelector("#ar-video");
+        const scene = document.querySelector("a-scene");
+        const entity = document.querySelector("[mindar-image-target]");
+        let videoEnabled = false;
 
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+        function enableVideo() {
+          if (!videoEnabled) {
+            videoEnabled = true;
+            document.querySelector("#prompt").style.display = "none";
+
+            entity.addEventListener("targetFound", () => {
+              video.muted = false;
+              video.play();
+            });
+
+            entity.addEventListener("targetLost", () => {
+              video.pause();
+              video.currentTime = 0;
+              video.muted = true;
+            });
+          }
+        }
+
+        document.body.addEventListener("click", enableVideo);
+        document.body.addEventListener("touchstart", enableVideo);
+      });
+    </script>
+  </head>
+
+  <body>
+    <div
+      id="prompt"
+      style="
+        position: fixed;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        background: white;
+        padding: 10px;
+        border-radius: 5px;
+      "
+    >
+      Sie müssen einmal auf den Bildschirm tippen und dann das Bild scannen, um
+      die Erkennung zu aktivieren. Wenn dies nicht der Fall ist, versuchen Sie
+      es bitte noch einmal.
+    </div>
+    <a-scene
+      mindar-image="imageTargetSrc:TryTarget.mind;"
+      vr-mode-ui="enabled: false"
+      device-oritentation-permission-ui="enabled:false"
+    >
+      <a-assets>
+        <video
+          id="ar-video"
+          playsinline
+          webkit-playsinline
+          crossorigin="anonymous"
+          src="https://cdn.glitch.global/b2346ca6-421b-437c-a11f-10311d66fff9/stomping-blues.mp4?v=1741092518603"
+          preload="auto"
+          muted
+        ></video>
+      </a-assets>
+      <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
       <a-entity mindar-image-target="targetIndex: 0">
-        <a-plane src="#card" position="0 0 0" height="0.552" width="1" rotation="0 0 0"></a-plane>
-        <a-gltf-model rotation="0 0 0 " position="0 0 0.1" scale="0.005 0.005 0.005" src="#avatarModel" animation="property: position; to: 0 0.1 0.1; dur: 1000; easing: easeInOutQuad; loop: true; dir: alternate">
+        <a-video
+          src="#ar-video"
+          width="1.5625"
+          height="1"
+          position="0 0 0"
+          rotation="0 0 0"
+          playsinline
+          webkit-playsinline
+        ></a-video>
       </a-entity>
     </a-scene>
   </body>
 </html>
-
-
-
-
