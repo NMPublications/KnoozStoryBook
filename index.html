@@ -3,50 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebAR Marker Tracking</title>
+    <title>WebAR High-Quality Camera</title>
     <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
-    <script src="https://cdn.rawgit.com/jeromeetienne/ar.js/1.7.2/aframe/build/aframe-ar.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/ar.js@1.7.2/aframe/build/aframe-ar.min.js"></script>
     <style>
         body { margin: 0; overflow: hidden; }
-        video { transform: scaleX(-1); } /* Fix mirroring */
+        video { transform: scaleX(1); } /* Prevent mirroring */
     </style>
 </head>
 <body>
-    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="antialias: true; precision: high;" vr-mode-ui="enabled: false">
-        <!-- Marker (Use your .patt marker file) -->
+    <video id="customCameraFeed" autoplay playsinline style="display: none;"></video>  
+
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;" renderer="antialias: true; precision: high;">
+        <!-- AR Marker -->
         <a-marker type="pattern" url="pattern-coverAR.patt">
-            <!-- Example 3D Model -->
-            <a-entity 
-                gltf-model="model.gltf" 
-                scale="1 1 1"
-                position="0 0 0">
-            </a-entity>
-
-            <!-- Example Video -->
-            <a-video 
-                src="video.mp4https://drive.google.com/uc?export=preview&id=1IkrJWyI2o7WUchp2Z8iKKVhoZ8k9qkta" 
-                width="2" height="1.2" 
-                position="0 0.5 0">
-            </a-video>
+            <a-video src="https://drive.google.com/uc?export=preview&id=1IkrJWyI2o7WUchp2Z8iKKVhoZ8k9qkta" width="2" height="1.2" position="0 0.5 0"></a-video>
         </a-marker>
-
         <a-entity camera></a-entity>
     </a-scene>
 
     <script>
-      // Force high-resolution camera
-      let arSource;
-      setTimeout(() => {
-        arSource = document.querySelector("a-scene").systems["arjs"].arSource;
-        arSource.ready.then(() => {
-          let constraints = {
-            video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: "environment" }
-          };
-          navigator.mediaDevices.getUserMedia(constraints).then((stream) => {
-            arSource.domElement.srcObject = stream;
-          });
-        });
-      }, 1000);
+      // Force High-Resolution Camera Feed
+      navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 1920 }, height: { ideal: 1080 }, facingMode: "environment" }
+      }).then((stream) => {
+          let video = document.getElementById("customCameraFeed");
+          video.srcObject = stream;
+          let arSource = document.querySelector("a-scene").systems["arjs"].arSource;
+          arSource.domElement.srcObject = stream;
+      }).catch((err) => console.error("Camera error:", err));
     </script>
 </body>
 </html>
