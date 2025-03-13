@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const video0 = document.querySelector("#ar-video-0");
+        const video1 = document.querySelector("#ar-video-1");
+        const sound0 = document.querySelector("#ar-sound-0");
+        const sound1 = document.querySelector("#ar-sound-1");
+
+        const entity0 = document.querySelector('[mindar-image-target="targetIndex: 0"]');
+        const entity1 = document.querySelector('[mindar-image-target="targetIndex: 1"]');
+
+        // Automatically play video and sound when marker 0 is found
+        entity0.addEventListener("targetFound", () => {
+          video0.muted = true; // Keep it muted initially to allow autoplay
+          video0.play();
+          sound0.play();
+          setTimeout(() => {
+            video0.muted = false; // Unmute after 500ms
+          }, 500);
+        });
+
+        // Pause and reset video and sound when marker 0 is lost
+        entity0.addEventListener("targetLost", () => {
+          video0.pause();
+          video0.currentTime = 0;
+          video0.muted = true; // Muted again when marker is lost
+          sound0.pause();
+          sound0.currentTime = 0;
+        });
+
+        // Automatically play video and sound when marker 1 is found
+        entity1.addEventListener("targetFound", () => {
+          video1.muted = true; // Keep it muted initially to allow autoplay
+          video1.play();
+          sound1.play();
+          setTimeout(() => {
+            video1.muted = false; // Unmute after 200ms
+          }, 200);
+        });
+
+        // Pause and reset video and sound when marker 1 is lost
+        entity1.addEventListener("targetLost", () => {
+          video1.pause();
+          video1.currentTime = 0;
+          video1.muted = true; // Muted again when marker is lost
+          sound1.pause();
+          sound1.currentTime = 0;
+        });
+      });
+    </script>
+  </head>
+
+  <body>
+    <a-scene mindar-image="imageTargetSrc:https://cdn.glitch.global/35ad6eb8-bb42-4c23-9bab-d159c42114d6/Combined.mind?v=1741826099047"
+             vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled:false">
+      
+      <a-assets>
+        <!-- First Video -->
+        <video id="ar-video-0" playsinline webkit-playsinline crossorigin="anonymous"
+               src="https://cdn.glitch.me/35ad6eb8-bb42-4c23-9bab-d159c42114d6/CoverAndIntro.mp4?v=1741740161161"
+               preload="auto" muted></video>
+        
+        <!-- Second Video -->
+        <video id="ar-video-1" playsinline webkit-playsinline crossorigin="anonymous"
+               src="https://cdn.glitch.me/35ad6eb8-bb42-4c23-9bab-d159c42114d6/Page1.mp4?v=1741740196214"
+               preload="auto" muted></video>
+
+        <!-- First Sound -->
+        <audio id="ar-sound-0" preload="auto">
+          <source src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/cat-98721.mp3?v=1741825898815" type="audio/mpeg" />
+        </audio>
+        
+        <!-- Second Sound -->
+        <audio id="ar-sound-1" preload="auto">
+          <source src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/cat-98721.mp3?v=1741825898815" type="audio/mpeg" />
+        </audio>
+
+        <!-- 3D Model for Marker 1 -->
+        <a-asset-item id="model-0" src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/bird_orange.glb?v=1741817387492"></a-asset-item>
+
+        <!-- 3D Model for Marker 2 -->
+        <a-asset-item id="model-1" src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/bird_orange.glb?v=1741817387492"></a-asset-item>
+      </a-assets>
+
+      <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
+
+      <!-- Marker 1 (Target Index 0) -->
+      <a-entity mindar-image-target="targetIndex: 0">
+        <a-video src="#ar-video-0" width="1.5625" height="1" position="0 0 0" rotation="0 0 0"
+                 autoplay loop playsinline webkit-playsinline></a-video>
+        <!-- 3D Model for Marker 1 -->
+       <a-entity gltf-model="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/bird_orange.glb?v=1741817387492" position="0 0.5 0" scale="0.5 0.5 0.5 " rotation="0 60 0"></a-entity>
+      </a-entity>
+
+      <!-- Marker 2 (Target Index 1) -->
+      <a-entity mindar-image-target="targetIndex: 1">
+        <a-video src="#ar-video-1" width="1.5625" height="1" position="0 0 0" rotation="0 0 0"
+                 autoplay loop playsinline webkit-playsinline></a-video>
+        <!-- 3D Model for Marker 2 -->
+       <a-entity gltf-model="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/bird_orange.glb?v=1741817387492" position="0 0.5 0" scale="0.5 0.5 0.5" rotation="0 60 0"></a-entity>
+      </a-entity>
+
+    </a-scene>
+  </body>
+</html>
