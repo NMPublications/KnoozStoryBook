@@ -3,16 +3,8 @@
   <head>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-	
-	
-    <script src="https://rawgit.com/donmccurdy/aframe-extras/master/dist/aframe-extras.loaders.min.js"></script>
-    <script src="https://unpkg.com/aframe-animation-component@3.2.1/dist/aframe-animation-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-particle-system-component@1.0.x/dist/aframe-particle-system-component.min.js"></script>
-    <script src="https://rawgit.com/blairmacintyre/aframe-look-at-billboard-component/master/dist/aframe-look-at-billboard-component.min.js"></script>
-    <script src="https://unpkg.com/aframe-vertical-billboard-component"></script>
 
-
-	
+    
     <script>
       window.addEventListener("DOMContentLoaded", () => {
         const videoElements = [];
@@ -33,22 +25,20 @@
                 videoElements[i].muted = true;
                 videoElements[i].play();
               }
-			  
-			  <!-- manualy added for targetmarkers with 2 audios-->
-			  if (i === 2) { 
-              document.querySelector("#ar-sound-2-2").play(); 
-               }
-			   
-        if (i === 18) { 
-              document.querySelector("#ar-sound-18-2").play(); 
-               }   
-              
-        if (i === 7) { 
-              document.querySelector("#ar-sound-7-2").play(); 
-               }
-              
-              
-			  
+
+              <!-- manualy added for targetmarkers with 2 audios-->
+              if (i === 2) {
+                document.querySelector("#ar-sound-2-2").play();
+              }
+
+              if (i === 18) {
+                document.querySelector("#ar-sound-18-2").play();
+              }
+
+              if (i === 7) {
+                document.querySelector("#ar-sound-7-2").play();
+              }
+
               if (soundElements[i]) soundElements[i].play();
               setTimeout(() => {
                 if (videoElements[i]) videoElements[i].muted = false;
@@ -79,10 +69,8 @@
       device-orientation-permission-ui="enabled:false"
     >
       <a-assets>
-        
-        
         <!-- Videos -->
-        
+
         <video
           id="ar-video-0"
           src="https://cdn.glitch.me/35ad6eb8-bb42-4c23-9bab-d159c42114d6/CoverAndIntro.mp4?v=1741740161161"
@@ -90,26 +78,23 @@
           muted
           crossorigin="anonymous"
         ></video>
-        
 
-        
-        
         <!-- Sounds -->
-        
+
         <audio id="ar-sound-0" preload="auto" crossorigin="anonymous">
           <source
             src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/cat-98721.mp3?v=1741825898815"
             type="audio/mpeg"
           />
         </audio>
-        
+
         <audio id="ar-sound-1" preload="auto" crossorigin="anonymous">
           <source
             src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/treasure.mp3?v=1741960531874"
             type="audio/mpeg"
           />
         </audio>
-        
+
         <audio id="ar-sound-2" preload="auto" crossorigin="anonymous">
           <source
             src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/GoodMorning03.mp3?v=1741895138547"
@@ -124,20 +109,27 @@
           />
         </audio>
         
+        <audio id="ar-sound-5" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/fajrprayer.mp3?v=1742000286569"
+            type="audio/mpeg"
+          />
+        </audio>
+
         <audio id="ar-sound-6" preload="auto" crossorigin="anonymous">
           <source
             src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/Morningzikr.mp3?v=1741980144452"
             type="audio/mpeg"
           />
         </audio>
-        
+
         <audio id="ar-sound-7" preload="auto" crossorigin="anonymous">
           <source
             src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/brushinghadeeth.mp3?v=1741989376565"
             type="audio/mpeg"
           />
         </audio>
-        
+
         <audio id="ar-sound-7-2" preload="auto" crossorigin="anonymous">
           <source
             src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/brushinsound.MP3?v=1741989931154"
@@ -145,78 +137,79 @@
           />
         </audio>
         
+        <audio id="ar-sound-11" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/goingouthadeeth.mp3?v=1742000792330"
+            type="audio/mpeg"
+          />
+        </audio>
+
         <audio id="ar-sound-18" preload="auto" crossorigin="anonymous">
           <source
             src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/rahma.mp3?v=1741970810872"
             type="audio/mpeg"
           />
         </audio>
-        
+
         <audio id="ar-sound-18-2" preload="auto" crossorigin="anonymous">
           <source
             src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/cat-98721.mp3?v=1741825898815"
             type="audio/mpeg"
           />
         </audio>
-        
+
         <audio id="ar-sound-25" preload="auto" crossorigin="anonymous">
           <source
             src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/quran.mp3?v=1741962914004"
             type="audio/mpeg"
           />
         </audio>
-        
+
         <audio id="ar-sound-26" preload="auto" crossorigin="anonymous">
           <source
             src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/sleep.mp3?v=1741924688409"
             type="audio/mpeg"
           />
         </audio>
-		
-		   <audio id="ar-sound-27" preload="auto" crossorigin="anonymous">
+
+        <audio id="ar-sound-27" preload="auto" crossorigin="anonymous">
           <source
             src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/27.mp3?v=1741919810871"
             type="audio/mpeg"
           />
         </audio>
-        
-        
-        
-        
 
         <!-- 3D Models -->
-        
+
         <a-asset-item
           id="model-0"
           src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/bird_orange.glb?v=1741817387492"
         ></a-asset-item>
-        
+
         <a-asset-item
           id="model-1"
           src="https://cdn.glitch.global/35ad6eb8-bb42-4c23-9bab-d159c42114d6/treasure_box.glb?v=1741831200829"
         ></a-asset-item>
-        
+
         <a-asset-item
           id="model-2"
           src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/alarm360.glb?v=1741965676107"
         ></a-asset-item>
-        
+
         <a-asset-item
           id="model-6"
           src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/cartoonish_clouds.glb?v=1741985004185"
         ></a-asset-item>
-        
+
         <a-asset-item
           id="model-18"
-          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/catty.glb?v=1741992877506"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/cartoon_3d_cat-opt.glb?v=1741996880121"
         ></a-asset-item>
-        
-         <a-asset-item
+
+        <a-asset-item
           id="model-25"
           src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/quranmushaf.glb?v=1741964826618"
         ></a-asset-item>
-        
-        
       </a-assets>
 
       <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
@@ -254,7 +247,7 @@
 
       <a-entity mindar-image-target="targetIndex: 1">
         <!-- Video, Model, and Audio -->
-        
+
         <a-entity
           gltf-model="#model-1"
           position="0 0.5 0.2"
@@ -275,32 +268,58 @@
 
       <a-entity mindar-image-target="targetIndex: 2">
         <!-- Model and Audio -->
-    
+
         <a-entity
           gltf-model="#model-2"
           position="0 -2  0"
           scale="0.09 0.09 0.09"
           rotation="0 0 0"
           look-at="[camera]"
-          >
+        >
         </a-entity>
-        
+
         <audio
           src="#ar-sound-2"
           autoplay="false"
           loop="false"
           position="0 0 0"
         ></audio>
-		
-		   <audio
+
+        <audio
           src="#ar-sound-2-2"
           autoplay="false"
           loop="false"
           position="0 0 0"
         ></audio>
- 
-         </a-entity>
-		 
+      </a-entity>
+      
+         <a-entity mindar-image-target="targetIndex: 5">
+        <!-- Video, Model, and Audio -->
+
+        <a-plane
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/praychild-min.png?v=1741999760477"
+          position="0 0 0"
+          scale="0.5 0.5 0.5"
+          width="2.5"
+          height="2.5"
+          material="transparent:true"
+          rotation="0 0 0"
+          shadow="receive: true"
+          dynamic-body="shape: box; mass: 2"
+          look-at="[camera]"
+        >
+        </a-plane>
+
+        <audio
+          src="#ar-sound-5"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+
       <a-entity mindar-image-target="targetIndex: 6">
         <!-- Video, Model, and Audio -->
         <a-entity
@@ -309,12 +328,12 @@
           scale="0.1 0.1 0.1"
           rotation="0 0 0"
           look-at="[camera]"
-          >
+        >
         </a-entity>
-        
+
         <a-plane
-          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/sunn.png?v=1741984199073"
-          position="-0.2 0 -2"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/sunn-min.png?v=1741998080427"
+          position="0 0 0"
           scale="0.5 0.5 0.5"
           width="2"
           height="2"
@@ -323,25 +342,22 @@
           shadow="receive: true"
           dynamic-body="shape: box; mass: 2"
           look-at="[camera]"
-          geometry="primitive: plane; width: 2; height: 2" 
+          geometry="primitive: plane; width: 2; height: 2"
           animation="property: position; dir: alternate; dur: 2000; easing: easeInOutSine; loop: true; to: 0 0.75 0"
-
         >
         </a-plane>
-        
+
         <audio
           src="#ar-sound-6"
           autoplay="false"
           loop="false"
           position="0 0 0"
         ></audio>
-        
       </a-entity>
-      
-      
+
       <a-entity mindar-image-target="targetIndex: 7">
         <!-- Video, Model, and Audio -->
-        
+
         <a-plane
           src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/boybrushingteeth.png?v=1741989418287"
           position="0 0.5 0"
@@ -355,145 +371,160 @@
           look-at="[camera]"
         >
         </a-plane>
-        
+
         <audio
           src="#ar-sound-7"
           autoplay="false"
           loop="false"
           position="0 0 0"
         ></audio>
-         
-         <audio
+
+        <audio
           src="#ar-sound-7-2"
           autoplay="false"
           loop="false"
           position="0 0 0"
         ></audio>
-        
       </a-entity>
       
-      
-       <a-entity mindar-image-target="targetIndex: 18">
+          <a-entity mindar-image-target="targetIndex: 11">
         <!-- Video, Model, and Audio -->
-        
+
+        <a-plane
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/Leaving%20Home-min.png?v=1741998162208"
+          position="0 0 0"
+          scale="0.5 0.5 0.5"
+          width="2.5"
+          height="2.5"
+          material="transparent:true"
+          rotation="0 0 0"
+          shadow="receive: true"
+          dynamic-body="shape: box; mass: 2"
+          look-at="[camera]"
+        >
+        </a-plane>
+
+        <audio
+          src="#ar-sound-11"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+
+      <a-entity mindar-image-target="targetIndex: 18">
+        <!-- Video, Model, and Audio -->
+
         <a-entity
           gltf-model="#model-18"
-          position="0 0 0"
-          scale="1.3 1.3 1.3"
-          rotation="0 -45 0"
+          position="0 -0.5 0"
+          scale="2 2 2"
+          rotation="0 -15 0"
           look-at="[camera]"
-          >
+          geometry="primitive: plane; width: 2; height: 2"
+        >
         </a-entity>
-        
+
         <audio
           src="#ar-sound-18"
           autoplay="false"
           loop="false"
           position="0 0 0"
         ></audio>
-         
-         <audio
+
+        <audio
           src="#ar-sound-18-2"
           autoplay="false"
           loop="false"
           position="0 0 0"
         ></audio>
-        
       </a-entity>
-      
-      
+
       <a-entity mindar-image-target="targetIndex: 25">
         <!-- Video, Model, and Audio -->
-        
+
         <a-entity
           gltf-model="#model-25"
           position="0 -0.5 0"
-          scale="0.0009 0.0009 0.0009"
+          scale="0.00065 0.00065 0.00065"
           rotation="0 0 0"
           look-at="[camera]"
-          >
+        >
         </a-entity>
-        
+
         <audio
           src="#ar-sound-25"
           autoplay="false"
           loop="false"
           position="0 0 0"
         ></audio>
-        
       </a-entity>
-      
-      
-      
+
       <a-entity mindar-image-target="targetIndex: 26">
         <!-- Model and Audio -->
         <a-plane
-          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/moonm.png?v=1741954283903"
-          position="-0.2 0 0"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/moonm-min.png?v=1741997905522"
+          position="0 0 0"
           scale="0.5 0.5 0.5"
-          width="3"
-          height="3"
+          width="1.2"
+          height="1.2"
           material="transparent:true"
           rotation="0 0 0"
           shadow="receive: true"
           dynamic-body="shape: box; mass: 2"
           look-at="[camera]"
-          geometry="primitive: plane; width: 3; height: 3"       
+          geometry="primitive: plane; width: 1.2; height: 1.2"
         >
         </a-plane>
-        
+
         <a-plane
-          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/sleepstar.png?v=1741958400608"
-          position="0.5 0.5 0.1"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/sleepstar-min.png?v=1741997744373"
+          position="0.4 0.3 0.1"
           scale="0.3 0.3 0.3"
-          width="2"
-          height="2"
+          width="1"
+          height="1"
           material="transparent:true"
           rotation="0 0 0"
           shadow="receive: true"
           dynamic-body="shape: box; mass: 2"
           look-at="[camera]"
-          geometry="primitive: plane; width: 2; height: 2"
+          geometry="primitive: plane; width: 1; height: 1"
           animation="property: scale; from: 0.3 0.3 0.3; to: 0.5 0.5 0.5; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine"
-       
         >
         </a-plane>
-        
-        
+
         <a-plane
-          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/cloudd.png?v=1741957769119"
-          position="-0.4 -0.5 1"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/cloudd-min.png?v=1741998014885"
+          position="-0.3 -0.2 0.2"
           scale="0.5 0.5 0.5"
-          width="2"
-          height="1.7"
-          material="transparent:true" 
+          width="1"
+          height="0.7"
+          material="transparent:true"
           rotation="0 0 0"
           shadow="receive: true"
           dynamic-body="shape: box; mass: 2"
           look-at="[camera]"
-          geometry="primitive: plane; width: 2; height: 1.7"
-          animation="property: position; from: -0.3 -0.5 0.2; to: 0.5 -0.5 0.2; dir: alternate; dur: 3000; loop: true; easing: easeInOutSine"
+          geometry="primitive: plane; width: 1; height: 0.7"
+          animation="property: position; from: -0.3 -0.2 0.2; to: 0.5 -0.2 0.2; dir: alternate; dur: 3000; loop: true; easing: easeInOutSine"
         >
         </a-plane>
-        
-        
+
         <audio
           src="#ar-sound-26"
           autoplay="false"
           loop="false"
           position="0 0 0"
         ></audio>
-        
-        </a-entity>
-      
-      
-		 
-		  <a-entity mindar-image-target="targetIndex: 27">
+      </a-entity>
+
+      <a-entity mindar-image-target="targetIndex: 27">
         <!-- Model and Audio -->
         <a-plane
-          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/trophy.png?v=1741918382323"
-          position="0 0.5 0"
-          scale="0.5 0.5 0.5"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/trophy-min.png?v=1742005273673"
+          position="0 0 0"
+          scale="0.25 0.25 0.25"
           width="4"
           height="4"
           material="transparent:true"
@@ -503,17 +534,14 @@
           look-at="[camera]"
         >
         </a-plane>
-        
+
         <audio
           src="#ar-sound-27"
           autoplay="false"
           loop="false"
           position="0 0 0"
         ></audio>
-        
-        </a-entity>
-		
-		
+      </a-entity>
     </a-scene>
   </body>
 </html>
