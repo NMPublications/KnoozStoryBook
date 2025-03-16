@@ -8,6 +8,67 @@
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
+  
+  
+    <script>
+      window.addEventListener("DOMContentLoaded", () => {
+        const videoElements = [];
+        const soundElements = [];
+        const entityElements = [];
+
+        for (let i = 0; i < 28; i++) {
+          videoElements.push(document.querySelector(`#ar-video-${i}`));
+          soundElements.push(document.querySelector(`#ar-sound-${i}`));
+          entityElements.push(
+            document.querySelector(`[mindar-image-target="targetIndex: ${i}"]`)
+          );
+
+          // Ensure the element exists before adding event listeners
+          if (entityElements[i]) {
+            entityElements[i].addEventListener("targetFound", () => {
+              if (videoElements[i]) {
+                videoElements[i].muted = true;
+                videoElements[i].play();
+              }
+
+              <!-- manualy added for targetmarkers with 2 audios-->
+              if (i === 2) {
+                document.querySelector("#ar-sound-2-2").play();
+              }
+
+              if (i === 18) {
+                document.querySelector("#ar-sound-18-2").play();
+              }
+
+              if (i === 7) {
+                document.querySelector("#ar-sound-7-2").play();
+              }
+
+              if (soundElements[i]) soundElements[i].play();
+              setTimeout(() => {
+                if (videoElements[i]) videoElements[i].muted = false;
+              }, 500);
+            });
+
+            entityElements[i].addEventListener("targetLost", () => {
+              if (videoElements[i]) {
+                videoElements[i].pause();
+                videoElements[i].currentTime = 0;
+                videoElements[i].muted = true;
+              }
+              if (soundElements[i]) {
+                soundElements[i].pause();
+                soundElements[i].currentTime = 0;
+              }
+            });
+          }
+        }
+      });
+    </script>
+  
+  
+  
+  
     <script>
     document.addEventListener("DOMContentLoaded", () => {
         AFRAME.registerComponent("gesture-detector", {
@@ -381,6 +442,8 @@
           scale="0.08 0.08 0.08"
           rotation="0 0 0"
           look-at="[camera]"
+          class="clickable"
+          gesture-handler
         >
         </a-entity>
 
