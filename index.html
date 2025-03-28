@@ -3,12 +3,103 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MindAR Gesture Control</title>
+    <title>Knooz Story Book</title>
   
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@latest/dist/aframe-extras.loaders.min.js"></script>
 
+  
+  
+  
+  <script>
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const videoElements = [];
+        const soundElements = [];
+        const entityElements = [];
+
+        for (let i = 0; i < 28; i++) {
+          videoElements.push(document.querySelector(`#ar-video-${i}`));
+          soundElements.push(document.querySelector(`#ar-sound-${i}`));
+          entityElements.push(
+            document.querySelector(`[mindar-image-target="targetIndex: ${i}"]`)
+          );
+
+          // Ensure the element exists before adding event listeners
+          if (entityElements[i]) {
+            entityElements[i].addEventListener("targetFound", () => {
+              if (videoElements[i]) {
+                videoElements[i].muted = true;
+                videoElements[i].play();
+              }
+
+              <!-- manualy added for targetmarkers with 2 audios-->
+              if (i === 1) {
+                document.querySelector("#ar-sound-1-2").play();
+              }
+              
+              if (i === 2) {
+                document.querySelector("#ar-sound-2-2").play();
+              }
+              
+              if (i === 4) {
+                document.querySelector("#ar-sound-4-2").play();
+              }
+              
+              
+              if (i === 6) {
+                document.querySelector("#ar-sound-6-2").play();
+              }
+
+              if (i === 7) {
+                document.querySelector("#ar-sound-7-2").play();
+              }
+              
+              if (i === 8) {
+                document.querySelector("#ar-sound-8-2").play();
+              }
+              
+              
+              if (i === 11) {
+                document.querySelector("#ar-sound-11-2").play();
+              }
+              
+              if (i === 16) {
+                document.querySelector("#ar-sound-16-2").play();
+              }
+
+              if (i === 18) {
+                document.querySelector("#ar-sound-18-2").play();
+              }
+              
+              
+
+              if (soundElements[i]) soundElements[i].play();
+              setTimeout(() => {
+                if (videoElements[i]) videoElements[i].muted = false;
+              }, 500);
+            });
+
+            entityElements[i].addEventListener("targetLost", () => {
+              if (videoElements[i]) {
+                videoElements[i].pause();
+                videoElements[i].currentTime = 0;
+                videoElements[i].muted = true;
+              }
+              if (soundElements[i]) {
+                soundElements[i].pause();
+                soundElements[i].currentTime = 0;
+              }
+            });
+          }
+        }
+      });
+    </script>
+  
+  
+  
+  
     <script>
         // ✅ Gesture Detector Component
         AFRAME.registerComponent("gesture-detector", {
@@ -78,12 +169,15 @@
             }
         });
     </script>
+  
+
+  
 
 </head>
 <body>
 
     <a-scene
-      mindar-image="imageTargetSrc:https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/CombinedMarkersWithCover.mind?v=1741896642649; filterMinCF:0.001; filterBeta: 0.01;  warmupTolerance: 1;  missTolerance: 3"
+      mindar-image="imageTargetSrc:https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/CombinedMarkersWithCover.mind?v=1741896642649; filterMinCF:0.001; filterBeta: 0.01;  uiScanning: yes;"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled:false"
       gesture-detector
@@ -117,6 +211,13 @@
         <audio id="ar-sound-1" preload="auto" crossorigin="anonymous">
           <source
             src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/treasure.mp3?v=1741960531874"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-1-2" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/sparklingbell.MP3?v=1743175763728"
             type="audio/mpeg"
           />
         </audio>
@@ -166,6 +267,13 @@
         <audio id="ar-sound-6" preload="auto" crossorigin="anonymous">
           <source
             src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/Morningzikr.mp3?v=1741980144452"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-6-2" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/birdssound.mp3?v=1743112521073"
             type="audio/mpeg"
           />
         </audio>
@@ -221,7 +329,7 @@
         
         <audio id="ar-sound-11-2" preload="auto" crossorigin="anonymous">
           <source
-            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/foot-steps-77348.mp3?v=1742296489013"
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/footsteps.MP3?v=1743165577185"
             type="audio/mpeg"
           />
         </audio>
@@ -401,7 +509,7 @@
         
         <a-asset-item  crossorigin="anonymous"
           id="model-8"
-          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/boyinkitchen.glb?v=1742559785676"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/boy-in-kitchen.glb?v=1743111743090"
         ></a-asset-item>
         
         <a-asset-item  crossorigin="anonymous"
@@ -416,7 +524,7 @@
         
         <a-asset-item  crossorigin="anonymous"
           id="model-11"
-          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/goingout.glb?v=1742296291086"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/boy-leavinghome3.glb?v=1742923832842"
         ></a-asset-item>
         
         <a-asset-item  crossorigin="anonymous"
@@ -441,7 +549,7 @@
         
         <a-asset-item  crossorigin="anonymous"
           id="model-16"
-          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/comp-angry1.glb?v=1742837167576"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/stop-angry-boy-v1.glb?v=1743017227862"
         ></a-asset-item>
         
         <a-asset-item  crossorigin="anonymous"
@@ -456,7 +564,7 @@
         
         <a-asset-item  crossorigin="anonymous"
           id="model-17-2"
-          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/anim-corrected-smile-emoji.glb?v=1742851803349"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/smilyface.glb?v=1742919021273"
         ></a-asset-item>
 
         <a-asset-item  crossorigin="anonymous"
@@ -471,7 +579,7 @@
         
         <a-asset-item  crossorigin="anonymous"
           id="model-20"
-          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/oldwomanspeech.glb?v=1742425322955"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/resize-old-lady2.glb?v=1743110926378"
         ></a-asset-item>
         
         <a-asset-item  crossorigin="anonymous"
@@ -743,6 +851,14 @@
           loop="false"
           position="0 0 0"
         ></audio>
+        
+        <audio
+          src="#ar-sound-6-2"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+        
       </a-entity>
 
       <a-entity mindar-image-target="targetIndex: 7">
@@ -876,7 +992,7 @@
         <a-entity
           gltf-model="#model-11"
           position="0  0  0"
-          scale="0.45 0.45 0.45"
+          scale="0.25 0.25 0.25"
           rotation="0  0  0"
           look-at="[camera]"
           class="clickable"
@@ -921,7 +1037,7 @@
         <a-entity
           gltf-model="#model-12"
           position="0 0  0"
-          scale="0.5 0.5 0.5"
+          scale="0.7 0.7 0.7"
           look-at="[camera]"
           dynamic-body="shape: box; mass: 2"
           class="clickable"
@@ -974,7 +1090,7 @@
         <a-entity
           gltf-model="#model-14"
           position="0 0  0"
-          scale="0.5 0.5 0.5"
+          scale="0.7 0.7 0.7"
           rotation="0 0 0"
           look-at="[camera]"
           class="clickable"
@@ -1027,6 +1143,8 @@
           scale="0.3 0.3 0.3"
           rotation="0 0 0"
           look-at="[camera]"
+          class="clickable"
+          gesture-handler
           >
           
         </a-entity>
@@ -1067,10 +1185,12 @@
 
         <a-entity animation-mixer
           gltf-model="#model-17"
-          position="0 0 0"
-          scale="0.5 0.5 0.5"
+          position="0.2 0 0"
+          scale="0.43 0.43 0.43"
           rotation="0 0 0"
           look-at="[camera]"
+          class="clickable"
+          gesture-handler
         >
         </a-entity>
         
@@ -1078,10 +1198,10 @@
         <a-entity 
           gltf-model="#model-17-2"
           position="-0.5 0 0.7"
-          scale="0.3 0.3 0.3"
+          scale="0.27 0.27 0.27"
           rotation="0 0 0"
           look-at="[camera]"
-          animation="property: position; from: -0.5 1 0.7; to: -0.5 -0.5 0.7; dur: 800; easing: easeInQuad; dir: alternate; loop: true"
+          animation="property: position; from: -0.5 0.7 0.7; to: -0.5 -0.3 0.7; dur: 800; easing: easeInQuad; dir: alternate; loop: true"
         >
         </a-entity>
         
@@ -1134,7 +1254,7 @@
         <a-entity
           gltf-model="#model-19"
           position="0 0  0"
-          scale="0.55 0.55 0.55"
+          scale="0.6 0.6 0.6"
           look-at="[camera]"
           class="clickable"
           gesture-handler
@@ -1157,8 +1277,9 @@
 
         <a-entity
           gltf-model="#model-20"
-          position="0 -0.2  0"
-          scale="0.55 0.55 0.55"
+          position="0 0  0"
+          scale="0.32 0.32 0.32"
+          rotation="0  0  0 "
           look-at="[camera]"
           class="clickable"
           gesture-handler
@@ -1253,7 +1374,7 @@
         <a-entity
           gltf-model="#model-24"
           position="0 0  0"
-          scale="0.3 0.3 0.3"
+          scale="0.25 0.25 0.25"
           rotation="0 0 0"
           look-at="[camera]"
           class="clickable"
@@ -1309,7 +1430,7 @@
         <a-entity
           gltf-model="#model-26-2"
           position="0 0  0"
-          scale="0.15 0.15 0.15"
+          scale="0.2 0.2 0.2"
           rotation="0 0 0"
           look-at="[camera]"
           animation="property: position; from: -0.3 -0.4 0.2; to: 0.4 -0.4 0.2; dir: alternate; dur: 3000; loop: true; easing: easeInOutSine"
