@@ -1,65 +1,1849 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>كنوز الأعمال الصالحة</title>
+  
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-    <script>
-      window.addEventListener("DOMContentLoaded", () => {
-        const video = document.querySelector("#ar-video");
-        const entity = document.querySelector("[mindar-image-target]");
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@latest/dist/aframe-extras.loaders.min.js"></script>
+    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+    
+  
+  
+  <script>
+  // 🔁 Utility Functions
+  function hideMindARElements() {
+    document.querySelectorAll('[class*="mindar-ui"]').forEach(el => {
+      el.style.visibility = 'hidden';
+    });
+  }
 
-        // Automatically play video when marker is found
-        entity.addEventListener("targetFound", () => {
-          video.muted = true; // Keep it muted initially to allow autoplay
-          video.play();
-          setTimeout(() => {
-            video.muted = false; // Unmute after a short delay
-          }, 500);
-        });
+  function showMindARElements() {
+    document.querySelectorAll('[class*="mindar-ui"]').forEach(el => {
+      el.style.visibility = '';
+    });
+  }
 
-        // Pause and reset when marker is lost
-        entity.addEventListener("targetLost", () => {
-          video.pause();
-          video.currentTime = 0;
-          video.muted = true;
+  function pauseAndHideVideos() {
+    document.querySelectorAll("video").forEach(video => {
+      video.pause();
+      video.style.visibility = 'hidden';
+    });
+  }
+
+  function resumeAndShowVideos() {
+    document.querySelectorAll("video").forEach(video => {
+      video.play();
+      video.style.visibility = '';
+    });
+  }
+    
+    
+    function playExtraAudio(i) {
+    const extraAudios = {
+      1: "ar-sound-1-2", 2: "ar-sound-2-2", 4: "ar-sound-4-2",
+      6: "ar-sound-6-2", 7: "ar-sound-7-2", 8: "ar-sound-8-2",
+      11: "ar-sound-11-2", 16: "ar-sound-16-2", 18: "ar-sound-18-2"
+    };
+    const extraId = extraAudios[i];
+    if (extraId) {
+      const audio = document.getElementById(extraId);
+      if (audio) audio.play();
+    }
+  }
+
+    
+
+  // ✅ Gesture components
+  AFRAME.registerComponent("gesture-detector", {
+    schema: { enabled: { default: true } },
+    init: function () {
+      this.mouseDown = false;
+      this.startX = 0;
+      this.el.sceneEl.addEventListener("loaded", () => {
+        const canvas = this.el.sceneEl.canvas;
+        if (!canvas) return console.error("Canvas not found");
+        canvas.addEventListener("mousedown", e => {
+          if (!this.data.enabled) return;
+          this.mouseDown = true;
+          this.startX = e.clientX;
         });
+        canvas.addEventListener("mousemove", e => {
+          if (this.mouseDown && this.data.enabled) {
+            const deltaX = e.clientX - this.startX;
+            this.el.emit("gesture-event", { deltaX });
+            this.startX = e.clientX;
+          }
+        });
+        canvas.addEventListener("mouseup", () => { this.mouseDown = false; });
+        canvas.addEventListener("touchstart", e => {
+          if (!this.data.enabled) return;
+          this.startX = e.touches[0].clientX;
+        });
+        canvas.addEventListener("touchmove", e => {
+          if (this.data.enabled) {
+            const deltaX = e.touches[0].clientX - this.startX;
+            this.el.emit("gesture-event", { deltaX });
+            this.startX = e.touches[0].clientX;
+          }
+        });
+        canvas.addEventListener("touchend", () => { this.startX = 0; });
       });
-    </script>
-  </head>
+    }
+  });
 
-  <body>
+  AFRAME.registerComponent("gesture-handler", {
+    schema: { rotationFactor: { default: 1 } },
+    init: function () {
+      this.el.sceneEl.addEventListener("gesture-event", (event) => {
+        const deltaX = event.detail.deltaX;
+        this.el.object3D.rotation.y += deltaX * this.data.rotationFactor * 0.01;
+      });
+    }
+  });
+
+  // ✅ Main Logic
+  document.addEventListener("DOMContentLoaded", () => {
+    const videoElements = [];
+    const soundElements = [];
+    const entityElements = [];
+    const placeButton = document.getElementById("placeModelButton");
+    let currentModelURL = null;
+
+    for (let i = 0; i < 28; i++) {
+      const video = document.getElementById(`ar-video-${i}`);
+      const sound = document.getElementById(`ar-sound-${i}`);
+      const model = document.getElementById(`model-${i}`);
+      const entity = document.querySelector(`[mindar-image-target="targetIndex: ${i}"]`);
+
+      videoElements[i] = video;
+      soundElements[i] = sound;
+      entityElements[i] = entity;
+
+      if (entity) {
+        entity.addEventListener("targetFound", () => {
+          if (video) {
+            video.muted = true;
+            video.play();
+            setTimeout(() => { video.muted = false }, 500);
+          }
+          if (sound) sound.play();
+          
+          // Call playExtraAudio with the specific index
+          playExtraAudio(i);  // Pass the index of the target (i.e., 1, 2, 4, etc.)
+
+          currentModelURL = model?.getAttribute("src") || null;
+
+          if (model) model.setAttribute("gesture-handler", ""); // ✅ ensure rotation
+
+          placeButton.style.display = "block";
+        });
+
+        entity.addEventListener("targetLost", () => {
+          if (video) {
+            video.pause();
+            video.currentTime = 0;
+            video.muted = true;
+          }
+          if (sound) {
+            sound.pause();
+            sound.currentTime = 0;
+          }
+          placeButton.style.display = "none";
+        });
+      }
+    }
+
+    // 🎯 Place model into scene
+    placeButton.addEventListener("click", () => {
+      if (!currentModelURL) return;
+
+      // Hide MindAR elements but keep camera stream active
+      hideMindARElements();
+      pauseAndHideVideos();
+
+      // Keep the A-Frame scene but hide the UI elements
+      const aScene = document.querySelector('a-scene');
+      if (aScene) {
+        aScene.style.visibility = 'hidden'; // Hide AR scene UI
+      }
+
+      placeButton.style.display = "none"; // Hide place button when model is placed
+
+      // Create model-viewer element
+      const modelViewer = document.createElement("model-viewer");
+      modelViewer.setAttribute("src", currentModelURL);
+      modelViewer.setAttribute("ar", "");
+      modelViewer.setAttribute("ar-modes", "scene-viewer quick-look");
+      modelViewer.setAttribute("camera-controls", "");
+      modelViewer.setAttribute("auto-rotate", "");
+      modelViewer.setAttribute("ar-placement", "floor");
+      modelViewer.style.position = "absolute";
+      modelViewer.style.bottom = "50px";
+      modelViewer.style.left = "50%";
+      modelViewer.style.transform = "translateX(-50%)";
+      modelViewer.style.width = "100vw";
+      modelViewer.style.height = "100%";
+      document.body.appendChild(modelViewer);
+
+      // Create a back button to return to AR
+      const backButton = document.createElement("button");
+      backButton.id = "backToARButton";
+      backButton.className = "back-button";
+      backButton.textContent = "Back to AR";
+      Object.assign(backButton.style, {
+        position: "fixed",
+        bottom: "60px",
+        left: "20px", /* Distance from the left side */
+        padding: "15px 30px",
+        fontSize: "18px",
+        fontWeight: "bold",
+        color: "white",
+        backgroundColor: "transparent",
+        border: "none",
+        borderRadius: "5px",
+        cursor: "pointer",
+        zIndex: "1000"
+      });
+      document.body.appendChild(backButton);
+
+      // Event listener for going back to AR view
+      backButton.addEventListener("click", () => {
+        modelViewer.remove();  // Remove the model viewer
+        backButton.remove();   // Remove the back button
+        showMindARElements();  // Show MindAR UI again
+        resumeAndShowVideos(); // Resume videos if any
+
+        if (aScene) {
+          aScene.style.visibility = ''; // Make A-Frame scene visible again
+        }
+
+        // Keep camera running smoothly
+        // Optional: Do not stop camera, keep it running as we just hide/show the elements
+
+        // Reactivate the camera (if needed: call getUserMedia to reinitiate stream)
+        const mindarVideo = document.querySelector("video");
+        if (mindarVideo && !mindarVideo.srcObject) {
+          navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+              mindarVideo.srcObject = stream;
+            }).catch(error => {
+              console.error("Error restarting camera:", error);
+            });
+        }
+      });
+    });
+  });
+</script>
+
+
+
+
+
+  
+  
+  <style>
+    .a-loader-title {
+      color: rgb(255, 255, 255) !important;
+      font-family: Tahoma, Verdana, sans-serif;
+      font-size: 25px;
+      font-weight: 300;
+      display: unset !important;
+      background: rgb(88, 159, 197) !important;  
+    }
+    html.a-fullscreen {
+    bottom: 0;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: 100% !important;   /* for weebly website make it 700px */
+    }
+    /* html.a-fullscreen {
+    bottom: 0;
+    left: 0;
+    position: fixed;
+    right: 0;
+    top: 0;
+    height: -webkit-fill-available;
+    width: -webkit-fill-available;
+    }
+    */
+    .mindar-ui-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: #64a6c917 !important;
+    z-index: 999 !important; 
+    height: 100% !important;
+    }
+    
+    
+    
+    /* Styling for the Place in Room Space button */
+    #placeModelButton {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 15px 30px;
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  background-color: #fffff;
+  border: none;
+  border-radius: 100px;
+  cursor: pointer;
+  z-index: 1000; /* High z-index to ensure it stays on top */
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  align-items: center;
+  justify-content: center;
+  gap: 10px; /* Space between the image and text */
+  width: 80px;  /* Adjust the size of the image */
+  height: 80px; /* Adjust the size of the image */
+  display: none; /* Initially hidden */
+}
+
+#placeModelButton:hover {
+  background-color: #5087a4;
+}
+
+.button-image {
+  display: inline;
+  position: absolute;
+  width: 80px;  /* Adjust the size of the image */
+  height: 80px; /* Adjust the size of the image */
+  object-fit: cover;
+  align-items: center;
+  justify-content: center;
+  bottom: 5px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+#placeModelButton span {
+  display: inline-block;
+  vertical-align: middle;
+}
+    
+    
+    .back-button {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  width: 80px; /* Adjust width as needed */
+  height: 80px; /* Adjust height as needed */
+  background: transparent;
+  background-image: url('https://cdn.glitch.global/243e4cfe-883a-4792-ba30-5c9bea0af09f/internet_14208143.png?v=1743800642053');
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  border: none;
+  border-radius: 50%; /* Optional: makes it circular */
+  cursor: pointer;
+  z-index: 1000;
+  text-indent: -9999px; /* Hides the button text */
+  transform-origin: bottom left;
+}
+   
+   
+    
+    .a-enter-vr-button {
+    display: none !important;
+   }
+    
+    
+    #default-ar-button {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  transform: scale(var(--ar-button-scale, 1));
+  transform-origin: bottom right;
+  }
+    
+    
+    model-viewer::part(default-ar-button) {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 80px;
+  height: 80px;
+  background-color: transparent;
+  border: none;
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* Custom image overlay */
+model-viewer::part(default-ar-button)::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('https://cdn.glitch.global/243e4cfe-883a-4792-ba30-5c9bea0af09f/book_withbackground.gif?v=1743803734738');
+  background-size: cover;
+  background-position: center;
+  pointer-events: none; /* allows click to pass through */
+  z-index: 10;
+}
+
+
+
+    
+    
+    #default-exit-webxr-ar-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: absolute;
+  top: env(safe-area-inset-top, 16px);
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  box-sizing: border-box;
+}
+    
+    model-viewer::part(default-exit-webxr-ar-button){
+       background-color: transparent; /* Make background transparent */
+  background-image: url('https://cdn.glitch.global/243e4cfe-883a-4792-ba30-5c9bea0af09f/delete-button_10860263.png?v=1743803324659'); /* Your custom image */
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  width: 30px;  /* Adjust size as needed */
+  height: 30px;
+  border: none
+    }
+    
+    
+  </style>
+  
+  
+  
+
+</head>
+<body>
+
+     <button id="placeModelButton">
+       <img src="https://cdn.glitch.global/243e4cfe-883a-4792-ba30-5c9bea0af09f/book_16675752-ezgif.com-gif-maker.gif?v=1743637240394" alt="Icon" class="button-image">
+       <span></span>
+    </button>
+    
+    <button id="backToARButton" style="display: none; position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%); padding: 15px 30px; font-size: 18px; font-weight: bold; color: white; background-color: red; border: none; border-radius: 5px; cursor: pointer; z-index: 1000;">
+        Back to AR
+    </button>
+
+   <!-- Hidden MindAR UI elements (initially hidden) -->
+    <div class="mindar-ui-overlay" style="display: none;"></div>
+    <div class="mindar-ui-scanning" style="display: none;"></div>
+  
+  
+  <div class="slot ar-button">
+    <slot name="ar-button">
+      <a id="default-ar-button" part="default-ar-button" class="fab"
+          tabindex="2"
+          role="button"
+          href="javascript:void(0);"
+          aria-label="View in your space">
+    
+      </a>
+    </slot>
+  </div>
+  
+  
     <a-scene
-      mindar-image="imageTargetSrc:https://cdn.glitch.global/35ad6eb8-bb42-4c23-9bab-d159c42114d6/TryTarget.mind?v=1741732155792;"
+      mindar-image="imageTargetSrc:https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/CombinedMarkersWithCover.mind?v=1741896642649; filterMinCF:0.001; filterBeta: 0.01;  uiScanning: yes;"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled:false"
+      gesture-detector
+      mindar-camera="fit: cover"
+      mindar="deviceId: 0;"
     >
+      
+   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+   
+        
       <a-assets>
+        <!-- Videos -->
+
         <video
-          id="ar-video"
-          playsinline
-          webkit-playsinline
-          crossorigin="anonymous"
-          src="https://cdn.glitch.me/35ad6eb8-bb42-4c23-9bab-d159c42114d6/CoverAndIntro.mp4?v=1741740161161"
+          id="ar-video-0"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/coveranim.mp4?v=1742466514902"
           preload="auto"
-          autoplay
           muted
+          crossorigin="anonymous"
         ></video>
+
+        <!-- Sounds -->
+
+        <audio id="ar-sound-0" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/coveraudio.mp3?v=1742465864615"
+            type="audio/mpeg"
+          />
+        </audio>
+
+        <audio id="ar-sound-1" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/treasure.mp3?v=1741960531874"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-1-2" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/sparklingbell.MP3?v=1743175763728"
+            type="audio/mpeg"
+          />
+        </audio>
+
+        <audio id="ar-sound-2" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/GoodMorning03.mp3?v=1741895138547"
+            type="audio/mpeg"
+          />
+        </audio>
+
+        <audio id="ar-sound-2-2" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/alarm.mp3?v=1741917850174"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-3" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/questionsound.mp3?v=1742058606531"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-4" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/wuduhadeeth.mp3?v=1742240001238"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-4-2" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/waterruning.MP3?v=1742250525663"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-5" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/fajrprayer.mp3?v=1742000286569"
+            type="audio/mpeg"
+          />
+        </audio>
+
+        <audio id="ar-sound-6" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/Morningzikr.mp3?v=1741980144452"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-6-2" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/birdssound.mp3?v=1743112521073"
+            type="audio/mpeg"
+          />
+        </audio>
+
+        <audio id="ar-sound-7" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/brushinghadeeth.mp3?v=1741989376565"
+            type="audio/mpeg"
+          />
+        </audio>
+
+        <audio id="ar-sound-7-2" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/brushinsound.MP3?v=1741989931154"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-8" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/momhelpinghadeeth.mp3?v=1742409919637"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-8-2" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/dishcleaning.MP3?v=1742418258943"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-9" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/Bismallh.mp3?v=1742398042269"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-10" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/bismallah2.mp3?v=1742399240035"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-11" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/goingouthadeeth.mp3?v=1742000792330"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-11-2" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/footsteps.MP3?v=1743165577185"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+         <audio id="ar-sound-12" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/helphadeeth.mp3?v=1742012198025"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-13" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/falldownsound.MP3?v=1742468342951"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-14" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/helping2hadith.mp3?v=1742422046581"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-15" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/studyhadeeth.mp3?v=1742009697354"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-16" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/angryhadith.mp3?v=1742462258525"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-16-2" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/boysquarrel.MP3?v=1742462987993"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-17" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/smilehadith.mp3?v=1742429763520"
+            type="audio/mpeg"
+          />
+        </audio>
+
+        <audio id="ar-sound-18" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/rahma.mp3?v=1741970810872"
+            type="audio/mpeg"
+          />
+        </audio>
+
+        <audio id="ar-sound-18-2" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/cat-98721.mp3?v=1741825898815"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+         <audio id="ar-sound-19" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/roadhadeeth.mp3?v=1742014262780"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-20" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/alhamdlelah.mp3?v=1742425330807"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-21" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/knocking-on-door.mp3?v=1742180588188"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-22" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/dadhadeeth.mp3?v=1742063564658"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-23" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/momhadeeth.mp3?v=1742063550246"
+            type="audio/mpeg"
+          />
+        </audio>
+        
+        <audio id="ar-sound-24" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/vaccumsound.mp3?v=1742664431003"
+            type="audio/mpeg"
+          />
+        </audio>
+
+        <audio id="ar-sound-25" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/quran.mp3?v=1741962914004"
+            type="audio/mpeg"
+          />
+        </audio>
+
+        <audio id="ar-sound-26" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/sleep.mp3?v=1741924688409"
+            type="audio/mpeg"
+          />
+        </audio>
+
+        <audio id="ar-sound-27" preload="auto" crossorigin="anonymous">
+          <source
+            src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/27.mp3?v=1741919810871"
+            type="audio/mpeg"
+          />
+        </audio>
+
+        <!-- 3D Models -->
+
+        <a-asset-item  crossorigin="anonymous"
+          id="model-0"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/bird_orange.glb?v=1741817387492"
+        ></a-asset-item>
+		
+		   <a-asset-item  crossorigin="anonymous"
+          id="model-0-1"
+          src="https://cdn.glitch.global/243e4cfe-883a-4792-ba30-5c9bea0af09f/boy-map-plannn-v1.glb?v=1743371652412"
+        ></a-asset-item>
+
+        <a-asset-item  crossorigin="anonymous"
+          id="model-1"
+          src="https://cdn.glitch.global/35ad6eb8-bb42-4c23-9bab-d159c42114d6/treasure_box.glb?v=1741831200829"
+        ></a-asset-item>
+
+        <a-asset-item  crossorigin="anonymous"
+          id="model-2"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/alarm.glb?v=1742291105575"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-3"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/questionmark2-v1.glb?v=1742599140824"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-4"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/dec-comp-wuduboysink.glb?v=1742673067584"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-5"
+          src="https://cdn.glitch.global/243e4cfe-883a-4792-ba30-5c9bea0af09f/prayeronmat3-v1.glb?v=1743544219828"
+        ></a-asset-item>
+
+        <a-asset-item  crossorigin="anonymous"
+          id="model-6"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/cartoonish_clouds.glb?v=1741985004185"
+        ></a-asset-item>
+        
+         <a-asset-item  crossorigin="anonymous"
+          id="model-6-2"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/rec-Sunshine.glb?v=1742683083401"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-7"
+          src="https://cdn.glitch.global/243e4cfe-883a-4792-ba30-5c9bea0af09f/toothwithbrush-v1.glb?v=1743536267403"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-8"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/boy-in-kitchen.glb?v=1743111743090"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-9"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/rec-deci-bismallahsandwich.glb?v=1742398021743"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-10"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/rec-deci-bismallahsandwich2.glb?v=1742399252108"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-11"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/boy-leavinghome3.glb?v=1742923832842"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-12"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/oldmanopt.glb?v=1742016151274"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-13"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/comp-boyschoolfall.glb?v=1742658040479"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-14"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/boyrememberman.glb?v=1742467971063"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-15"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/book-icon.glb?v=1742663565688"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-16"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/stop-angry-boy-v1.glb?v=1743017227862"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-16-2"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/stopsign-icon.glb?v=1742771056764"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-17"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/comp-gesturewave2.glb?v=1742851745403"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-17-2"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/smilyface.glb?v=1742919021273"
+        ></a-asset-item>
+
+        <a-asset-item  crossorigin="anonymous"
+          id="model-18"
+          src="https://cdn.glitch.global/243e4cfe-883a-4792-ba30-5c9bea0af09f/catwithbowl-v1.glb?v=1743531184319"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-19"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/roadcleanboy.glb?v=1742299030205"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-20"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/resize-old-lady2.glb?v=1743110926378"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-21"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/decimated-welcomeboyparkscene.glb?v=1742392482851"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-22"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/heartsss.glb?v=1742599462148"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-24"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/dec-cleanbedroom.glb?v=1742559809565"
+        ></a-asset-item>
+
+        <a-asset-item  crossorigin="anonymous"
+          id="model-25"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/quran-cartoon.glb?v=1742853838852"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-26"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/rec-Golden_Crescent.glb?v=1742688971893"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-26-2"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/comp-cartooncloud.glb?v=1742689436827"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-26-3"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/comp-3d-zzzsleepystar.glb?v=1742714293366"
+        ></a-asset-item>
+        
+        <a-asset-item  crossorigin="anonymous"
+          id="model-27"
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/rotatedtrophy.glb?v=1742172271358"
+        ></a-asset-item>
+    
+        
       </a-assets>
+      
 
-      <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
+     
 
+      <!-- Markers and Models -->
       <a-entity mindar-image-target="targetIndex: 0">
-        <a-video
-          src="#ar-video"
+        <!-- Video, Model, and Audio -->
+		
+        <!--a-video
+          src="#ar-video-0"
           width="1.5625"
           height="1"
           position="0 0 0"
-          rotation="0 0 0"
-          autoplay loop
+          autoplay
+          loop
           playsinline
           webkit-playsinline
-        ></a-video>
+          crossorigin="anonymous"
+        ></a-video-->
+        
+        <!--a-entity
+          gltf-model="#model-0"
+          position="0 0.5 0"
+          scale="0.5 0.5 0.5"
+          rotation="-10 -65 0"
+          look-at="[camera]"
+          animation="property: position; dir: alternate; dur: 2000; easing: easeInOutSine; loop: true; to: 0 0.75 0"
+          class="clickable"
+          gesture-handler
+          >
+        </a-entity-->
+		
+		
+		  <a-entity
+          gltf-model="#model-0-1"
+          position="0 0 0"
+          scale="0.3 0.3 0.3"
+          rotation="0 0 0"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+          >
+        </a-entity>
+		
+		
+        <audio
+          src="#ar-sound-0"
+          autoplay="true"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+      </a-entity>
+      
+	  
+
+      <a-entity mindar-image-target="targetIndex: 1">
+        <!-- Video, Model, and Audio -->
+
+        <a-entity
+          gltf-model="#model-1"
+          position="0 0 0.2"
+          scale="0.5 0.5 0.5" 
+          look-at="[camera]"
+          shadow="receive: true"
+          dynamic-body="shape: box; mass: 2"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+        <audio
+          src="#ar-sound-1"
+          autoplay="true"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+      </a-entity>
+
+      <a-entity mindar-image-target="targetIndex: 2">
+        <!-- Model and Audio -->
+
+        <a-entity
+          gltf-model="#model-2"
+          position="0 0  0"
+          scale="0.7 0.7 0.7"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-2"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+        <audio
+          src="#ar-sound-2-2"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+      </a-entity>
+      
+      
+      <a-entity mindar-image-target="targetIndex: 3">
+        <!-- Model and Audio -->
+
+        <a-entity
+          gltf-model="#model-3"
+          position="0 0  0"
+          scale="0.5 0.5 0.5"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-3"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+      
+      <a-entity mindar-image-target="targetIndex: 4">
+        <!-- Model and Audio -->
+
+        <a-entity
+          gltf-model="#model-4"
+          position="0 0  0"
+          scale="0.5 0.5 0.5"    
+          look-at="[camera]"
+          dynamic-body="shape: box; mass: 2"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-4"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+        
+         <audio
+          src="#ar-sound-4-2"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+         <a-entity mindar-image-target="targetIndex: 5">
+        <!-- Video, Model, and Audio -->
+          <a-entity
+          gltf-model="#model-5"
+          position="0 0  0"
+          scale="0.4 0.4 0.4"
+          rotation="0 40 0"
+          look-at="[camera]"
+          dynamic-body="shape: box; mass: 2"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity> 
+          
+
+        <!--a-plane
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/praychild-min.png?v=1741999760477"
+          position="0 0 0"
+          scale="0.5 0.5 0.5"
+          width="2.5"
+          height="2.5"
+          material="transparent:true"
+          rotation="0 0 0"
+          shadow="receive: true"
+          dynamic-body="shape: box; mass: 2"
+          look-at="[camera]"
+        >
+        </a-plane-->
+
+        <audio
+          src="#ar-sound-5"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+
+      <a-entity mindar-image-target="targetIndex: 6">
+        <!-- Video, Model, and Audio -->
+        <a-entity
+          gltf-model="#model-6"
+          position="0 -0.2 0"
+          scale="0.08 0.08 0.08"
+          rotation="0 0 0"
+          look-at="[camera]"
+        >
+        </a-entity>
+        
+        
+        <a-entity
+          gltf-model="#model-6-2"
+          position="0 0 0"
+          scale="0.4 0.4 0.4"
+          rotation="0 0 0"
+          look-at="[camera]"
+          animation="property: position; dir: alternate; dur: 2000; easing: easeInOutSine; loop: true; to: 0 0.75 0"
+        >
+        </a-entity>
+
+        <!--a-plane
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/sunn-min.png?v=1741998080427"
+          position="0 0 0"
+          scale="0.5 0.5 0.5"
+          width="1.5"
+          height="1.5"
+          material="transparent:true"
+          rotation="0 0 0"
+          shadow="receive: true"
+          dynamic-body="shape: box; mass: 2"
+          look-at="[camera]"
+          geometry="primitive: plane; width: 1.5; height: 1.5"
+          animation="property: position; dir: alternate; dur: 2000; easing: easeInOutSine; loop: true; to: 0 0.75 0"
+        >
+        </a-plane-->
+
+        <audio
+          src="#ar-sound-6"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+        
+        <audio
+          src="#ar-sound-6-2"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+        
+      </a-entity>
+
+      <a-entity mindar-image-target="targetIndex: 7">
+        <!-- Video, Model, and Audio -->
+        
+        <a-entity
+          gltf-model="#model-7"
+          position="0 0  0"
+          scale="0.5 0.5 0.5"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <!--a-plane
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/boybrushingteeth.png?v=1741989418287"
+          position="0 0 0"
+          scale="0.5 0.5 0.5"
+          width="1.2"
+          height="2.2"
+          material="transparent:true"
+          rotation="0 0 0"
+          shadow="receive: true"
+          dynamic-body="shape: box; mass: 2"
+          look-at="[camera]"
+        >
+        </a-plane-->
+
+        <audio
+          src="#ar-sound-7"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+        <audio
+          src="#ar-sound-7-2"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+      </a-entity>
+      
+      
+      
+      <a-entity mindar-image-target="targetIndex: 8">
+        <!-- Video, Model, and Audio -->
+            
+        <a-entity
+          gltf-model="#model-8"
+          position="0  0  0"
+          scale="0.2 0.2 0.2"
+          rotation="0  0  0"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-8"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+        
+        <audio
+          src="#ar-sound-8-2"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+      
+      <a-entity mindar-image-target="targetIndex: 9">
+        <!-- Video, Model, and Audio -->
+            
+        <a-entity
+          gltf-model="#model-9"
+          position="0  0  0"
+          scale="0.45 0.45 0.45"
+          rotation="0  0  0"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-9"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>  
+
+      </a-entity>
+      
+      
+      
+      <a-entity mindar-image-target="targetIndex: 10">
+        <!-- Video, Model, and Audio -->
+            
+        <a-entity
+          gltf-model="#model-10"
+          position="0  0  0"
+          scale="0.45 0.45 0.45"
+          rotation="0  0  0"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-10"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>  
+
+      </a-entity>
+      
+      
+      
+          <a-entity mindar-image-target="targetIndex: 11">
+        <!-- Video, Model, and Audio -->
+            
+        <a-entity
+          gltf-model="#model-11"
+          position="0  0  0"
+          scale="0.25 0.25 0.25"
+          rotation="0  0  0"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <!--a-plane
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/leavinghome-min.png?v=1742007117494"
+          position="0 0 0"
+          scale="0.5 0.5 0.5"
+          width="2"
+          height="2"
+          material="transparent:true"
+          rotation="0 0 0"
+          shadow="receive: true"
+          dynamic-body="shape: box; mass: 2"
+          look-at="[camera]"
+        >
+        </a-plane-->
+
+        <audio
+          src="#ar-sound-11"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+            
+         <audio
+          src="#ar-sound-11-2"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>   
+
+      </a-entity>
+      
+      
+        <a-entity mindar-image-target="targetIndex: 12">
+        <!-- Model and Audio -->
+
+        <a-entity
+          gltf-model="#model-12"
+          position="0 0  0"
+          scale="0.7 0.7 0.7"
+          look-at="[camera]"
+          dynamic-body="shape: box; mass: 2"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-12"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+      
+      
+      
+      <a-entity mindar-image-target="targetIndex: 13">
+        <!-- Model and Audio -->
+
+        <a-entity
+          gltf-model="#model-13"
+          position="0 0  0"
+          rotation="0 0 0"
+          scale="0.4 0.4 0.4"
+          look-at="[camera]"
+          shadow="receive: true"
+          dynamic-body="shape: box; mass: 2"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-13"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+      
+      
+      <a-entity mindar-image-target="targetIndex: 14">
+        <!-- Model and Audio -->
+
+        <a-entity
+          gltf-model="#model-14"
+          position="0 0  0"
+          scale="0.7 0.7 0.7"
+          rotation="0 0 0"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-14"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+      
+      <a-entity mindar-image-target="targetIndex: 15">
+        <!-- Model and Audio -->
+
+        <a-entity
+          gltf-model="#model-15"
+          position="0 0  0"
+          scale="0.5 0.5 0.5"
+          rotation="0 0 0"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-15"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+      
+      
+      
+      <a-entity mindar-image-target="targetIndex: 16">
+        <!-- Model and Audio -->
+
+        <a-entity  animation-mixer
+          gltf-model="#model-16"
+          position="0.2  0  0"
+          scale="0.3 0.3 0.3"
+          rotation="0 0 0"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+          >
+          
+        </a-entity>
+        
+        
+        <!--a-entity
+          gltf-model="#model-16-2"
+          position="0 0 0"
+          scale="0.2 0.2 0.2"
+          rotation="0 0 0"
+          look-at="[camera]"
+          dynamic-body="shape: box; mass: 2"
+        >  
+        </a-entity-->
+        
+
+        <audio
+          src="#ar-sound-16"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+        
+        <audio
+          src="#ar-sound-16-2"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+      
+      
+      
+      <a-entity mindar-image-target="targetIndex: 17">
+        <!-- Model and Audio -->
+
+        <a-entity animation-mixer
+          gltf-model="#model-17"
+          position="0.2 0 0"
+          scale="0.43 0.43 0.43"
+          rotation="0 0 0"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+        
+        
+        <a-entity 
+          gltf-model="#model-17-2"
+          position="-0.5 0 0.7"
+          scale="0.27 0.27 0.27"
+          rotation="0 0 0"
+          look-at="[camera]"
+          animation="property: position; from: -0.5 0.7 0.7; to: -0.5 -0.3 0.7; dur: 800; easing: easeInQuad; dir: alternate; loop: true"
+        >
+        </a-entity>
+        
+
+        <audio
+          src="#ar-sound-17"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+
+      <a-entity mindar-image-target="targetIndex: 18">
+        <!-- Video, Model, and Audio -->
+
+        <a-entity
+          gltf-model="#model-18"
+          position="0 0 0"
+          scale="0.5 0.5 0.5"
+          rotation="0 0 0"
+          look-at="[camera]"
+          dynamic-body="shape: box; mass: 2"
+          class="clickable"
+          gesture-handler
+        >  
+        </a-entity>
+
+        <audio
+          src="#ar-sound-18"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+        <audio
+          src="#ar-sound-18-2"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+      
+      </a-entity>
+      
+      
+      <a-entity mindar-image-target="targetIndex: 19">
+        <!-- Model and Audio -->
+
+        <a-entity
+          gltf-model="#model-19"
+          position="0 0  0"
+          scale="0.6 0.6 0.6"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-19"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+      
+      
+      <a-entity mindar-image-target="targetIndex: 20">
+        <!-- Model and Audio -->
+
+        <a-entity
+          gltf-model="#model-20"
+          position="0 0  0"
+          scale="0.32 0.32 0.32"
+          rotation="0  0  0 "
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-20"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+      
+      <a-entity mindar-image-target="targetIndex: 21">
+        <!-- Model and Audio -->
+
+        <a-entity
+          gltf-model="#model-21"
+          position="0 0  0"
+          scale="0.5 0.5 0.5"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-21"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+      
+       <a-entity mindar-image-target="targetIndex: 22">
+        <!-- Model and Audio -->
+
+        <a-entity
+          gltf-model="#model-22"
+          position="0 0  0"
+          scale="0.5 0.5 0.5"
+          rotation="0 0 0"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-22"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+      
+      <a-entity mindar-image-target="targetIndex: 23">
+        <!-- Model and Audio -->
+
+        <a-entity
+          gltf-model="#model-22"
+          position="0 0  0"
+          scale="0.5 0.5 0.5"
+          rotation="0 0 0"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-23"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+      
+      
+      <a-entity mindar-image-target="targetIndex: 24">
+        <!-- Model and Audio -->
+
+        <a-entity
+          gltf-model="#model-24"
+          position="0 0  0"
+          scale="0.25 0.25 0.25"
+          rotation="0 0 0"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-24"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+
+      </a-entity>
+      
+      
+
+      <a-entity mindar-image-target="targetIndex: 25">
+        <!-- Video, Model, and Audio -->
+
+        <a-entity
+          gltf-model="#model-25"
+          position="0 0 0"
+          scale="0.5 0.5 0.5"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+
+        <audio
+          src="#ar-sound-25"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+      </a-entity>
+      
+      
+
+      <a-entity mindar-image-target="targetIndex: 26">
+        <!-- Model and Audio -->
+        <a-entity
+          gltf-model="#model-26"
+          position="-0.3 0  0"
+          scale="0.5 0.5 0.5"
+          rotation="0 -90 0"
+          look-at="[camera]"
+        >
+        </a-entity>
+        
+        <a-entity
+          gltf-model="#model-26-2"
+          position="0 0  0"
+          scale="0.2 0.2 0.2"
+          rotation="0 0 0"
+          look-at="[camera]"
+          animation="property: position; from: -0.3 -0.4 0.2; to: 0.4 -0.4 0.2; dir: alternate; dur: 3000; loop: true; easing: easeInOutSine"
+        >
+        </a-entity>
+        
+        
+        <a-entity
+          gltf-model="#model-26-3"
+          position="0.35 0.3 0"
+          scale="0.3 0.3 0.3"
+          rotation="0 0 0"
+          look-at="[camera]"
+          animation="property: scale; from: 0.3 0.3 0.3; to: 0.5 0.5 0.5; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine"
+        >
+        </a-entity>
+        
+        
+        <!--a-plane
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/moonm-min.png?v=1741997905522"
+          position="0 0 0"
+          scale="0.5 0.5 0.5"
+          width="1.2"
+          height="1.2"
+          material="transparent:true"
+          rotation="0 0 0"
+          shadow="receive: true"
+          dynamic-body="shape: box; mass: 2"
+          look-at="[camera]"
+          geometry="primitive: plane; width: 1.2; height: 1.2"
+        >
+        </a-plane-->
+
+        <!--a-plane
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/sleepstar-min.png?v=1741997744373"
+          position="0.35 0.3 0.1"
+          scale="0.3 0.3 0.3"
+          width="1"
+          height="1"
+          material="transparent:true"
+          shadow="receive: true"
+          dynamic-body="shape: box; mass: 2"
+          look-at="[camera]"
+          geometry="primitive: plane; width: 1; height: 1"
+          animation="property: scale; from: 0.3 0.3 0.3; to: 0.5 0.5 0.5; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine"
+        >
+        </a-plane-->
+
+        <!--a-plane
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/cloudd-min.png?v=1741998014885"
+          position="-0.3 -0.2 0.2"
+          scale="0.5 0.5 0.5"
+          width="1"
+          height="0.7"
+          material="transparent:true"
+          rotation="0 0 0"
+          shadow="receive: true"
+          dynamic-body="shape: box; mass: 2"
+          look-at="[camera]"
+          geometry="primitive: plane; width: 1; height: 0.7"
+          animation="property: position; from: -0.3 -0.2 0.2; to: 0.5 -0.2 0.2; dir: alternate; dur: 3000; loop: true; easing: easeInOutSine"
+        >
+        </a-plane-->
+
+        <audio
+          src="#ar-sound-26"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
+      </a-entity>
+
+      <a-entity mindar-image-target="targetIndex: 27">
+        <!-- Model and Audio -->
+        
+         <a-entity
+          gltf-model="#model-27"
+          position="0 0 0"
+          scale="0.3 0.3 0.3"
+          look-at="[camera]"
+          class="clickable"
+          gesture-handler
+        >
+        </a-entity>
+        
+        
+        <!--a-plane
+          src="https://cdn.glitch.global/75ea1622-fc54-4f5d-903f-81f0fe756caf/trophy-min.png?v=1742005273673"
+          position="0 0 0"
+          scale="0.25 0.25 0.25"
+          width="4"
+          height="4"
+          material="transparent:true"
+          rotation="0 0 0"
+          shadow="receive: true"
+          dynamic-body="shape: box; mass: 2"
+          look-at="[camera]"
+        >
+        </a-plane-->
+
+        <audio
+          src="#ar-sound-27"
+          autoplay="false"
+          loop="false"
+          position="0 0 0"
+        ></audio>
       </a-entity>
     </a-scene>
+    
+  
+    
   </body>
 </html>
